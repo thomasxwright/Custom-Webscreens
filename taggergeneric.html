@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script src="autotoolsfunctions.js"></script>
+	<link rel="stylesheet" type="text/css" href="autotoolsstyle.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="autotoolswebscreen" type="variablejs" id="allTags" label="Tags" description="All available tags"
+		defaultValue="demo,example,tags,in,a,list,separated,by,commas" />
+	<meta name="autotoolswebscreen" type="variablejs" id="preloadedTags" label="Preselected tags"
+		description="Pre-selected tags" defaultValue="%Active_tags" />
+	<meta name="autotoolswebscreen" type="variablejs" id="selectedColor" label="Selected Tag Color"
+		description="Background Color for the selected tags" isColor="true" defaultValue="lightblue">
+	<meta name="autotoolswebscreen" type="variablejs" id="unselectedColor" label="Unselected Tag Color"
+		description="Background Color for the unused tags" isColor="true" defaultValue="aliceblue">
+	<meta name="autotoolswebscreen" type="variablehtml" id="image" label="Image Path"
+		description="Path for the image being displayed above the tags" attribute="src" defaultValue="%Wallpaper" />
+	<meta name="autotoolswebscreen" type="variablejs" id="rating" defaultValue="%Image_rating" label="Image Rating"
+		description="The rating for this image from 1 to 7. Unrated images are stored as -1">
+	<meta name="autotoolswebscreen" type="variablejs" id="category2Tags" label="Category 2 Tags"
+		description="All the tags for category 2." defaultValue="%Category2_tags" />
+	<meta name="autotoolswebscreen" type="variablejs" id="category3Tags" label="Category 3 Tags"
+		description="All the tags for category 3." defaultValue="%Category3_tags" />
+	<meta name="autotoolswebscreen" type="variablejs" id="activeCategory" label="Active Category"
+		description="The category of the image being carried into the tagger." defaultValue="%Active_category" />
+
+
+
+
+
+
+
+
+	<style>
+		body {
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			justify-content: center;
+			text-align: center;
+			font-family: "Roboto";
+			margin: 0 8px 0;
+			overscroll-behavior-y: none;
+		}
+
+		.headerContainer {
+			width: 49.5%;
+			display: inline-block;
+		}
+
+		#items {
+			flex-wrap: wrap;
+			display: flex;
+			justify-content: center;
+		}
+
+		img {
+			max-height: 200px;
+			height: auto;
+			width: auto;
+			justify-content: center;
+		}
+
+		.item {
+			margin: 3px;
+		}
+
+		.category {
+			padding: .7em 5%;
+		}
+
+		.micButton {
+			position: absolute;
+			right: 0px;
+			top: -2.5em;
+			padding: .7em 5%;
+			background-color: rgba(255, 255, 255, .75);
+		}
+
+		.rating {
+			display: inline-block;
+			padding: .7em 5%;
+		}
+
+		.allTags {
+			display: inline-block;
+			padding: 1em;
+		}
+
+		.ratingsContainer {
+			width: 100%;
+			margin: 0 5% 0 0;
+			overflow-x: auto;
+			white-space: nowrap;
+			display: flex;
+			left: 0%;
+			text-align: left;
+			justify-content: space-between;
+			font-size: small;
+			overflow-x: scroll;
+			-ms-overflow-style: none;
+		}
+
+		.ratingsContainer::-webkit-scrollbar {
+			width: 0;
+			height: 0;
+		}
+	</style>
+
+</head>
+
+
+
+<body>
+	<div style="position:sticky; top:0; background-color: white;padding-top: 4px;">
+		<img id="image" src="https://pbs.twimg.com/media/DZL5rpHU0AIQ1XL?format=jpg">
+	</div>
+
+	<div id="items"></div>
+
+	<span class="item">
+		<span class="allTags">Sample Title</span>
+	</span>
+	<div style="position:sticky;bottom:0;background-color: white;height: 100px;font-size: larger;">
+		<div class="ratingsContainer">
+			<span class="category" onclick="viewTagsFromCategory(this.innerText)">Category 1</span>
+			<span class="category" onclick="viewTagsFromCategory(this.innerText)">Category 2</span>
+			<span class="category" onclick="viewTagsFromCategory(this.innerText)">Category 3</span>
+		</div>
+		<div>
+			<div
+				style="width: 75%;margin: 0 5% 0 0;position: absolute;display: flex;left: 0%;text-align: left;justify-content: space-between;">
+				<span class="rating" id="rating1" onclick="toggleRating(this)">1</span>
+				<span class="rating" id="rating2" onclick="toggleRating(this)">2</span>
+				<span class="rating" id="rating3" onclick="toggleRating(this)">3</span>
+				<span class="rating" id="rating4" onclick="toggleRating(this)">4</span>
+				<span class="rating" id="rating5" onclick="toggleRating(this)">5</span>
+				<span class="rating" id="rating6" onclick="toggleRating(this)">6</span>
+				<span class="rating" id="rating7" onclick="toggleRating(this)">7</span>
+			</div>
+			<div style="width:19%; margin: 0;position: absolute; right: 0; display: flex; justify-content: center;">
+				<span id="saved" onclick="toggleSaving(this)" style="padding: .7em 5%;">Save</span>
+			</div>
+		</div>
+	</div>
+</body>
+
+
+
+<script type="text/javascript">
+	var listening = false;
+	var pageTitle = "Super Title";
+
+	AutoTools.setDefault("selectedColor", "lightblue");
+	AutoTools.setDefault("unselectedColor", "aliceblue");
+	AutoTools.setDefault("rating", "-1");
+
+	AutoTools.setDefault("category1Tags", "example,list,of,tags");
+	AutoTools.setDefault("category2Tags", "another,list,of,tags,for,a,second,category,of,images");
+	AutoTools.setDefault("category3Tags", "another,list,of,tags,maybe,this,list,is,tags,for,photographs");
+	AutoTools.setDefault("activeCategory", "Category 1");
+
+	if (AutoTools.isSet("preloadedTags")) {
+		preloadedTags = preloadedTags.split(",");
+
+	}
+
+	tagCategories = {};
+	tagCategories["Category 1"] = category1Tags.split(",");
+	tagCategories["Category 2"] = category2Tags.split(",");
+	tagCategories["Category 3"] = category3Tags.split(",");
+
+	var activeTags = [];
+
+	function setTagElement(tagName) {
+		for (item of document.getElementsByClassName(tagName)) {
+			if (tags[tagName]) {
+				if (tagCategories[activeCategory].includes(tagName))
+					item.style.backgroundColor = selectedColor;
+				else
+					item.style.backgroundColor = "beige";
+			}
+			else {
+				item.style.backgroundColor = unselectedColor;
+			}
+		}
+	}
+
+
+	for (tag of activeTags) {
+		if (!tagCategories[activeCategory].includes(tag)) {
+			var item = document.getElementsByClassName(tag);
+			item[0].parentElement.style.display = "block";
+			item[0].style.backgroundColor = "beige";
+		}
+	}
+
+
+	var allTagsString = [category1Tags, category2Tags, category3Tags].join(',')
+	allTags = [...new Set(allTagsString.split(','))]
+
+	if (!preloadedTags[0].includes("%")) {
+		for (tag of preloadedTags) {
+			if (!allTags.split(",").includes(tag) && tag != "Saved") {
+				allTags += "," + tag;
+			}
+		}
+	}
+
+	AutoTools.variablesToElements(["allTags"], "items", "item", {
+		"onclick": item => {
+			if (!item) {
+				return;
+			}
+			tags[item.allTags] = !tags[item.allTags];
+			if (tags[item.allTags]) {
+				activeTags.push(item.allTags);
+			}
+			else if (activeTags.indexOf(item.allTags) > -1) {
+				activeTags.splice(activeTags.indexOf(item.allTags), 1);
+			}
+
+			setTagElement(item.allTags);
+			AutoTools.sendCommand("image data modified=:=" + activeTags + "=:=" + rating);
+		},
+		"events": [{
+			"name": "change",
+			"query": ".checked",
+			"handler": element => console.log(element.checked)
+		}],
+		"item": item => {
+			item.allTags.element.classList.add(item.allTags.element.innerText);
+		}
+	}
+	);
+	var tags = {};
+	if (AutoTools.isSet("allTags")) {
+		for (each of allTags.split(",")) {
+			tags[each] = preloadedTags.includes(each);
+			if (tags[each] && !activeTags.includes(each)) {
+				activeTags.push(each);
+			}
+			setTagElement(each);
+		}
+
+		var savedButton = document.getElementById("saved");
+		if (preloadedTags.includes("Saved")) {
+			savedButton.innerText = "Saved";
+			savedButton.style.backgroundColor = "turquoise";
+			tags["Saved"] = true;
+			activeTags.push("Saved");
+		}
+		else {
+			savedButton.innerText = "Save";
+			savedButton.style.backgroundColor = "snow";
+			tags["Saved"] = false;
+			if (activeTags.indexOf("Saved") > -1)
+				activeTags.splice(activeTags.indexOf("Saved"), 1);
+		}
+	}
+
+
+
+	viewTagsFromCategory(activeCategory);
+
+
+
+	if (AutoTools.isSet("rating")) {
+		for (element of document.querySelectorAll(".rating")) {
+			if (element.innerText == rating) {
+				element.style.backgroundColor = "crimson";
+				element.style.color = "white";
+			}
+			else {
+				element.style.backgroundColor = "snow";
+			}
+		}
+	}
+
+
+
+
+	function toggleSaving(element) {
+		tags["Saved"] = !tags["Saved"];
+		if (tags["Saved"]) {
+			savedButton.innerText = "Saved";
+			savedButton.style.backgroundColor = "turquoise";
+			activeTags.push("Saved");
+		}
+		else {
+			savedButton.innerText = "Save";
+			savedButton.style.backgroundColor = "snow";
+			activeTags.splice(activeTags.indexOf("Saved"), 1);
+		}
+		AutoTools.sendCommand("image data modified=:=" + activeTags + "=:=" + rating);
+	}
+
+	function toggleRating(element) {
+		if (rating > 0) {
+			var oldRating = document.getElementById("rating" + rating);
+			oldRating.style.backgroundColor = "snow";
+			oldRating.style.color = "black";
+		}
+		if (element.innerText != rating) {
+			element.style.backgroundColor = "crimson";
+			element.style.color = "white";
+			rating = element.innerText;
+		}
+		else {
+			rating = -1;
+		}
+
+		AutoTools.sendCommand("image data modified=:=" + activeTags + "=:=" + rating);
+	}
+
+
+	function viewTagsFromCategory(category) {
+		for (item of document.getElementsByClassName("category")) {
+			if (item.innerText == category) {
+				item.style.backgroundColor = "coral";
+				item.style.color = "white";
+			}
+			else {
+				item.style.backgroundColor = "white";
+				item.style.color = "black";
+			}
+		}
+
+		activeCategory = category;
+
+		for (item of document.getElementsByClassName("item")) {
+			item.style.display = "none";
+		}
+
+
+		for (tag of tagCategories[activeCategory]) {
+			var item = document.getElementsByClassName(tag);
+			if (item.length > 0) {
+				item[0].parentElement.style.display = "block";
+			}
+			if (tags[tag]) {
+				item[0].style.backgroundColor = selectedColor;
+			}
+		}
+
+		for (tag of activeTags) {
+			if (!tagCategories[activeCategory].includes(tag) && tag != "Saved") {
+				var item = document.getElementsByClassName(tag)[0];
+				item.parentElement.style.display = "block";
+				item.style.backgroundColor = "beige";
+			}
+		}
+
+		for (tag of document.getElementsByClassName(item.className)) {
+
+		}
+	}
+
+	function setTagActive(tag) {
+		if (!tags[tag]) {
+			tags[tag] = true;
+
+			activeTags.push(tag);
+			for (item of document.getElementsByClassName(tag)) {
+				if (tagCategories[activeCategory].includes(tag))
+					item.style.backgroundColor = selectedColor;
+				else {
+					var item = document.getElementsByClassName(tag);
+					item[0].parentElement.style.display = "block";
+					item[0].style.backgroundColor = "beige";
+				}
+			}
+
+		}
+	}
+
+	var autoToolsUpdateValues = function (values) {
+		AutoTools.sendCommand("image data modified=:=" + activeTags + "=:=" + rating);
+	}
+
+</script>
+
+</html>
